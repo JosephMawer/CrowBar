@@ -1,0 +1,47 @@
+﻿@page "/menu"
+
+
+
+    <div class="main">
+        <ul class="pizza-cards">
+            @if (menu != null)
+            {
+                @foreach (var menuItem in menu)
+                {
+                    <li style="background-image: url('@menuItem.ImageUrl')">
+                        <div class="pizza-info">
+                            <span class="title">@menuItem.Name</span>
+                            @menuItem.Description
+                            <span class="price">@menuItem.GetFormattedBasePrice()</span>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+
+@code {
+
+    public class MenuItem
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string ImageUrl { get; set; }
+        public string GetFormattedBasePrice()
+        {
+            return "9.99";
+        }
+    }
+
+    // todo: replace this with a database call (soon)...
+    private IList<MenuItem> menu = new List<MenuItem>()
+    {
+        new MenuItem() {Name = "Chicken Burger", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
+        new MenuItem() {Name = "Bean Burger", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
+        new MenuItem() {Name = "Poutine", Description = "Try our mouth watering poutine and gravy with cheese from Empire!"},
+        new MenuItem() {Name = "Salad", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
+        new MenuItem() {Name = "Hot Dog", Description = "Get your delicious frankenfurt style sausage!"},
+        new MenuItem() {Name = "Hamburger With Bacon", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
+    };
+
+}
