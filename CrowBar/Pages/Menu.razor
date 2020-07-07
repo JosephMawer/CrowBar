@@ -1,38 +1,42 @@
 ﻿@page "/menu"
 
+@using CrowBar.Models;
 
 
-    <div class="main">
-        <ul class="pizza-cards">
-            @if (menu != null)
+<div class="main">
+    <ul class="pizza-cards">
+        @if (menu != null)
+        {
+            @foreach (var menuItem in menu)
             {
-                @foreach (var menuItem in menu)
-                {
-                    <li style="background-image: url('@menuItem.ImageUrl')">
-                        <div class="pizza-info">
-                            <span class="title">@menuItem.Name</span>
-                            @menuItem.Description
-                            <span class="price">@menuItem.GetFormattedBasePrice()</span>
-                        </div>
-                    </li>
-                }
+                <li @onclick="@(() => ShowSideMenuItemsDialog(menuItem))" style="background-image: url('@menuItem.ImageUrl')">
+                    <div class="pizza-info">
+                        <span class="title">@menuItem.Name</span>
+                        @menuItem.Description
+                        <span class="price">@menuItem.GetFormattedBasePrice()</span>
+                    </div>
+                </li>
             }
-        </ul>
-    </div>
+        }
+    </ul>
+</div>
 
+@if (showingSideMenuItemsDialog)
+{
+    <SideMenuItemsDialog Item=SelectedItem/>
+}
 @code {
 
-    public class MenuItem
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string ImageUrl { get; set; }
-        public string GetFormattedBasePrice()
-        {
-            return "9.99";
-        }
-    }
 
+    MenuItem SelectedItem;
+
+    bool showingSideMenuItemsDialog;
+    void ShowSideMenuItemsDialog(MenuItem item)
+    {
+
+        SelectedItem = item;
+        showingSideMenuItemsDialog = true;
+    }
     // todo: replace this with a database call (soon)...
     private IList<MenuItem> menu = new List<MenuItem>()
     {
