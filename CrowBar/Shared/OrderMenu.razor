@@ -1,0 +1,18 @@
+﻿<div class="cart-item">
+    <a @onclick="OnRemoved" class="delete-item">x</a>
+    <div class="title">@(OrderItem.Name)</div>
+    <ul>
+        @foreach (var side in OrderItem.Sides)
+        {
+            <li>+ @side.Name</li>
+        }
+    </ul>
+    <div class="item-price">
+        @OrderItem.GetFormattedBasePrice()
+    </div>
+</div>
+
+@code {
+    [Parameter] public CrowBar.Models.MenuItem OrderItem { get; set; }
+    [Parameter] public EventCallback OnRemoved { get; set; }
+}

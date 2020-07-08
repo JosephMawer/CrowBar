@@ -21,22 +21,54 @@
     </ul>
 </div>
 
-@if (showingSideMenuItemsDialog)
+<div class="sidebar">
+    @if (order.Items.Any())
+    {
+        <div class="order-contents">
+            <h2>Your order</h2>
+
+            @foreach (var menuItem in order.Items)
+            {
+                <OrderMenu OrderItem="menuItem" OnRemoved="@(() => RemoveConfiguredPizza(menuItem))" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-cart">Choose a pizza<br>to get started</div>
+    }
+
+    <div class="order-total @(order.Items.Any() ? "" : "hidden")">
+        Total:
+        <span class="total-price">@order.GetFormattedBasePrice()</span>
+        <button class="btn btn-warning" disabled="@(order.Items.Count == 0)" @onclick="PlaceOrder">
+            Order >
+        </button>
+    </div>
+</div>
+
+@if (showDialog)
 {
-    <SideMenuItemsDialog Item=SelectedItem/>
+    <SideMenuItemsDialog 
+                Item=selectedItem 
+                OnCancel="CancelDialog" 
+                OnConfirm="ConfirmDialog"/>
 }
 @code {
 
+    // private members
+    MenuItem selectedItem;
+    Order order = new Order();
+    bool showDialog;
 
-    MenuItem SelectedItem;
 
-    bool showingSideMenuItemsDialog;
     void ShowSideMenuItemsDialog(MenuItem item)
     {
 
-        SelectedItem = item;
-        showingSideMenuItemsDialog = true;
+        selectedItem = item;
+        showDialog = true;
     }
+
     // todo: replace this with a database call (soon)...
     private IList<MenuItem> menu = new List<MenuItem>()
     {
@@ -48,4 +80,28 @@
         new MenuItem() {Name = "Hamburger With Bacon", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
     };
 
+    // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the 
+    // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
+    void CancelDialog()
+    {
+        selectedItem = null;
+        showDialog = false;
+    }
+
+    void ConfirmDialog()
+    {
+        order.Items.Add(selectedItem);
+        selectedItem = null;
+
+        showDialog = false;
+    }
+    void RemoveConfiguredPizza(MenuItem pizza)
+    {
+        order.Items.Remove(pizza);
+    }
+
+    async Task PlaceOrder()
+    {
+        order = new Order();
+    }
 }
