@@ -47,7 +47,7 @@
         <div class="dialog-buttons">
             <button class="btn btn-secondary mr-auto" @onclick="OnCancel">Cancel</button>
             <span class="mr-center">
-                Price: <span class="price">@(Item.GetFormattedBasePrice())</span>
+                Price: <span class="price">@(Item.Price)</span>
             </span>
             <button class="btn btn-success ml-auto" @onclick="OnConfirm">Order ></button>
         </div>

@@ -8,7 +8,7 @@ namespace CrowBar.Models
         {
             var total = 0f;
             foreach (var item in Items)
-                total += float.Parse(item.GetFormattedBasePrice());
+                total += float.Parse(item.Total());
             return total.ToString("F2");
         }
         public List<MenuItem> Items { get; set; } = new List<MenuItem>();

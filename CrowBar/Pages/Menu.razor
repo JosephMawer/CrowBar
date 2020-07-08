@@ -13,7 +13,7 @@
                     <div class="pizza-info">
                         <span class="title">@menuItem.Name</span>
                         @menuItem.Description
-                        <span class="price">@menuItem.GetFormattedBasePrice()</span>
+                        <span class="price">@menuItem.Price</span>
                     </div>
                 </li>
             }
@@ -21,6 +21,19 @@
     </ul>
 </div>
 
+@* Keep this dialog code here so that vs code doesn't fuck up syntax hightlighting 
+   of the actual code block *@
+
+@if (showDialog)
+{
+    <SideMenuItemsDialog 
+                Item=selectedItem 
+                OnCancel="CancelDialog" 
+                OnConfirm="ConfirmDialog"/>
+}
+
+
+@* This is the side bar component that displays all your orders *@
 <div class="sidebar">
     @if (order.Items.Any())
     {
@@ -29,7 +42,9 @@
 
             @foreach (var menuItem in order.Items)
             {
-                <OrderMenu OrderItem="menuItem" OnRemoved="@(() => RemoveConfiguredPizza(menuItem))" />
+                <OrderMenu 
+                    MenuItem="menuItem" 
+                    OnRemoved="@(() => RemoveConfiguredPizza(menuItem))" />
             }
         </div>
     }
@@ -47,19 +62,13 @@
     </div>
 </div>
 
-@if (showDialog)
-{
-    <SideMenuItemsDialog 
-                Item=selectedItem 
-                OnCancel="CancelDialog" 
-                OnConfirm="ConfirmDialog"/>
-}
+
 
 
 @code {
 
     MenuItem selectedItem;
-    OrderItem order = new OrderItem();
+    Order order = new Order();
     bool showDialog;
 
 
@@ -72,12 +81,12 @@
 
     private IList<MenuItem> menu = new List<MenuItem>()
     {
-        new MenuItem() {Name = "Chicken Burger", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
-        new MenuItem() {Name = "Bean Burger", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
-        new MenuItem() {Name = "Poutine", Description = "Try our mouth watering poutine and gravy with cheese from Empire!"},
-        new MenuItem() {Name = "Salad", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
-        new MenuItem() {Name = "Hot Dog", Description = "Get your delicious frankenfurt style sausage!"},
-        new MenuItem() {Name = "Hamburger With Bacon", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
+        new MenuItem() {Name = "Chicken Burger", Price = "14.99", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
+        new MenuItem() {Name = "Bean Burger",Price = "12.99", Description = "Beans, beans, the magical fruit, the more you eat the more you toot. Healthy and delicious :)"},
+        new MenuItem() {Name = "Poutine", Price = "8.99", Description = "Try our mouth watering poutine and gravy with cheese from Empire!"},
+        new MenuItem() {Name = "Salad", Price = "11.99", Description = "Salad... pweh!"},
+        new MenuItem() {Name = "Hot Dog", Price = "6.99", Description = "Get your delicious frankenfurt style sausage!"},
+        new MenuItem() {Name = "Hamburger With Bacon", Price = "14.99", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
     };
 
     // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the 
@@ -103,7 +112,7 @@
 
     async Task PlaceOrder()
     {
-        order = new OrderItem();
+        order = new Order();
         await Task.CompletedTask; // add this for now so vs code stops complaining at me
     }
 }
