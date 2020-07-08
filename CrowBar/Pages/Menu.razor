@@ -54,11 +54,12 @@
                 OnCancel="CancelDialog" 
                 OnConfirm="ConfirmDialog"/>
 }
+
+
 @code {
 
-    // private members
     MenuItem selectedItem;
-    Order order = new Order();
+    OrderItem order = new OrderItem();
     bool showDialog;
 
 
@@ -69,7 +70,6 @@
         showDialog = true;
     }
 
-    // todo: replace this with a database call (soon)...
     private IList<MenuItem> menu = new List<MenuItem>()
     {
         new MenuItem() {Name = "Chicken Burger", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
@@ -82,6 +82,7 @@
 
     // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the 
     // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
+    
     void CancelDialog()
     {
         selectedItem = null;
@@ -102,6 +103,7 @@
 
     async Task PlaceOrder()
     {
-        order = new Order();
+        order = new OrderItem();
+        await Task.CompletedTask; // add this for now so vs code stops complaining at me
     }
 }
