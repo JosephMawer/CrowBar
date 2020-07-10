@@ -1,20 +1,22 @@
-﻿@using CrowBar;
-
-<div class="cart-item">
+﻿<div class="cart-item">
     <a @onclick="OnRemoved" class="delete-item">x</a>
-    <div class="title">@(MenuItem.Name)</div>
-    <ul>
-        @foreach (var side in MenuItem.Sides)
-        {
-            <li>+ @side.Name, @side.Price</li>
-        }
-    </ul>
+    <div class="title">@(Main.Name)</div>
+    
+    @if(Main.Sides != null)
+    {
+        <div>+ @Main.Sides.Name</div>
+    }
+    @if (Main.Drink != null)
+    {
+        <div>+ @Main.Drink.Name</div>
+    }
+
     <div class="item-price">
-        @MenuItem.Total();
+        @Main.Total()
     </div>
 </div>
 
 @code {
-    [Parameter] public Models.MenuItem MenuItem { get; set; }
+    [Parameter] public Models.Main Main { get; set; }
     [Parameter] public EventCallback OnRemoved { get; set; }
 }

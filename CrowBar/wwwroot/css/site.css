@@ -139,7 +139,7 @@ form {
         padding: 0;
     }
 
-.pizza-cards {
+.menu-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, 20rem);
     grid-gap: 2rem;
@@ -147,7 +147,7 @@ form {
     padding-left: 0;
 }
 
-    .pizza-cards > li {
+    .menu-cards > li {
         height: 10rem;
         position: relative;
         background-size: cover;
@@ -157,7 +157,7 @@ form {
         transition: 0.1s ease-out;
     }
 
-        .pizza-cards > li:hover {
+        .menu-cards > li:hover {
             transform: scale(1.02);
         }
 
@@ -410,6 +410,17 @@ form {
     background-color: #eee;
     padding: 0 1rem;
 }
+
+.menu-buttons {
+    height: 4rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 0 1rem;
+    margin: 5px 5px 5px 5px;
+}
+
 
 .dialog-body > div {
     display: flex;

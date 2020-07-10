@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CrowBar.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,5 +10,10 @@ namespace CrowBar.Data
             : base(options)
         {
         }
+
+        public DbSet<Drink> Drinks { get; set; }
+        public DbSet<Side> Sides { get; set; }
+        public DbSet<Main> Mains { get; set; }
+        public DbSet<Order> Orders { get; set; }
     }
 }

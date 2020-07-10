@@ -2,96 +2,118 @@
 
 @using CrowBar.Models;
 
+@inject CrowBar.Data.ApplicationDbContext _db;
 
-<div class="main">
-    <ul class="pizza-cards">
-        @if (menu != null)
-        {
-            @foreach (var menuItem in menu)
+
+    <div class="main">
+        @* toggle between menu/sides/drinks*@
+        <div class="menu-buttons">
+            <button class="btn btn-success ml-auto" @onclick="ShowMains">Mains</button>
+            <button class="btn btn-success ml-auto" @onclick="ShowSides">Sides</button>
+            <button class="btn btn-success ml-auto" @onclick="ShowSides">Drinks</button>
+        </div>
+
+        <ul class="menu-cards">
+            @if (showMainMenu)
             {
-                <li @onclick="@(() => ShowSideMenuItemsDialog(menuItem))" style="background-image: url('@menuItem.ImageUrl')">
-                    <div class="pizza-info">
-                        <span class="title">@menuItem.Name</span>
-                        @menuItem.Description
-                        <span class="price">@menuItem.Price</span>
-                    </div>
-                </li>
+                @if (menu != null)
+                {
+                    @foreach (var menuItem in menu)
+                    {
+                        <li @onclick="@(() => ShowSideMenuItemsDialog(menuItem))" style="background-image: url('@menuItem.ImageUrl')">
+                            <div class="pizza-info">
+                                <span class="title">@menuItem.Name</span>
+                                @menuItem.Description
+                                <span class="price">@menuItem.Price</span>
+                            </div>
+                        </li>
+                    }
+                }
             }
-        }
-    </ul>
-</div>
+            else
+            {
+                @if (sides != null)
+                {
+                    @foreach (var side in sides)
+                    {
+                        <li>
+                            <div class="pizza-info">
+                                <span class="title">@side.Name</span>
+                                @side.Description
+                                <span class="price">@side.Price</span>
+                            </div>
+                        </li>
+                    }
+                }
+            }
 
-@* Keep this dialog code here so that vs code doesn't fuck up syntax hightlighting 
-   of the actual code block *@
-
-@if (showDialog)
-{
-    <SideMenuItemsDialog 
-                Item=selectedItem 
-                OnCancel="CancelDialog" 
-                OnConfirm="ConfirmDialog"/>
-}
+        </ul>
+    </div>
 
 
 @* This is the side bar component that displays all your orders *@
 <div class="sidebar">
-    @if (order.Items.Any())
+    @if (order.Mains.Any() || order.Sides.Any())
     {
         <div class="order-contents">
             <h2>Your order</h2>
 
-            @foreach (var menuItem in order.Items)
+            @foreach (var main in order.Mains)
             {
-                <OrderMenu 
-                    MenuItem="menuItem" 
-                    OnRemoved="@(() => RemoveConfiguredPizza(menuItem))" />
+                <OrderMenu Main="main"
+                           OnRemoved="@(() => RemoveOrder(main))" />
             }
+
+
         </div>
     }
     else
     {
-        <div class="empty-cart">Choose a pizza<br>to get started</div>
+        <div class="empty-cart">Choose from our menu<br>to get started</div>
     }
 
-    <div class="order-total @(order.Items.Any() ? "" : "hidden")">
+    <div class="order-total @(order.Mains.Any() || order.Sides.Any() ? "" : "hidden")">
         Total:
         <span class="total-price">@order.GetFormattedBasePrice()</span>
-        <button class="btn btn-warning" disabled="@(order.Items.Count == 0)" @onclick="PlaceOrder">
+        <button class="btn btn-warning" disabled="@(order.Mains.Count == 0)" @onclick="PlaceOrder">
             Order >
         </button>
     </div>
 </div>
 
-
+@if (showDialog)
+{
+    <SideMenuItemsDialog Main="selectedItem"
+                         OnCancel="CancelDialog"
+                         OnConfirm="ConfirmDialog" />
+}
 
 
 @code {
 
-    MenuItem selectedItem;
+    Main selectedItem;
     Order order = new Order();
-    bool showDialog;
-
-
-    void ShowSideMenuItemsDialog(MenuItem item)
+    bool showDialog, showMainMenu;
+    IList<Main> menu;
+    IList<Side> sides;
+    void ShowSideMenuItemsDialog(Main item)
     {
 
         selectedItem = item;
         showDialog = true;
     }
 
-    private IList<MenuItem> menu = new List<MenuItem>()
+    protected override void OnInitialized()
     {
-        new MenuItem() {Name = "Chicken Burger", Price = "14.99", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
-        new MenuItem() {Name = "Bean Burger",Price = "12.99", Description = "Beans, beans, the magical fruit, the more you eat the more you toot. Healthy and delicious :)"},
-        new MenuItem() {Name = "Poutine", Price = "8.99", Description = "Try our mouth watering poutine and gravy with cheese from Empire!"},
-        new MenuItem() {Name = "Salad", Price = "11.99", Description = "Salad... pweh!"},
-        new MenuItem() {Name = "Hot Dog", Price = "6.99", Description = "Get your delicious frankenfurt style sausage!"},
-        new MenuItem() {Name = "Hamburger With Bacon", Price = "14.99", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
-    };
+        base.OnInitialized();
+        menu = _db.Mains.ToList();
+        showMainMenu = true;
+        sides = _db.Sides.ToList();
+    }
 
-    // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the 
+    // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the
     // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
-    
+
     void CancelDialog()
     {
         selectedItem = null;
@@ -100,19 +122,25 @@
 
     void ConfirmDialog()
     {
-        order.Items.Add(selectedItem);
+        
+        order.Mains.Add(selectedItem);
         selectedItem = null;
 
         showDialog = false;
     }
-    void RemoveConfiguredPizza(MenuItem pizza)
+    void RemoveOrder(Main main)
     {
-        order.Items.Remove(pizza);
+        order.Mains.Remove(main);
     }
 
     async Task PlaceOrder()
     {
+        _db.Orders.Add(order);
+        _db.SaveChanges();
         order = new Order();
-        await Task.CompletedTask; // add this for now so vs code stops complaining at me
     }
+
+    // toggles between main and side menu
+    void ShowMains() => showMainMenu = true;
+    void ShowSides() => showMainMenu = false;
 }

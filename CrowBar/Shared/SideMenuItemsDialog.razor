@@ -1,53 +1,60 @@
 ﻿@using CrowBar.Models;
 
+
+@inject CrowBar.Data.ApplicationDbContext _db;
+
 @* This is a child component - its parent is Menu.razor (page) *@
 
 <div class="dialog-container">
     <div class="dialog">
         <div class="dialog-title">
-            <h2>@Item.Name</h2>
-            @Item.Description
+            <h2>@Main.Name</h2>
+            @Main.Description
         </div>
         <form class="dialog-body">
 
             <div>
-                <label>Add a side:</label>
+                <label>Add A Side:</label>
                 @if (Sides == null)
                 {
-                    <select class="custom-select" disabled>
-                        <option>(loading...)</option>
+                    <select class="custom-select" @onchange="SideSelected">
+                        <option value="-1" disabled selected>(select)</option>
+                        @for (var i = 0; i < Sides.Count; i++) {
+                            <option value="@i">@Sides[i].Name - (£@(Sides[i].Price))</option>
+                        }
                     </select>
                 }
-                else
+            </div>
+            <div>
+                <label>Add A Drink:</label>
+                @if (Drinks != null)
                 {
-                    <select class="custom-select" @onchange="SideItemSelected">
+                    <select class="custom-select" @onchange="DrinkSelected">
                         <option value="-1" disabled selected>(select)</option>
-                        @for (var i = 0; i < Sides.SideItems.Count; i++)
-                        {
-                            // I guess <option /> is a combo box.. cool
-                            <option value="@i">@Sides.SideItems[i].Name - (£@(Sides.SideItems[i].Price))</option>
+                        @for (var i = 0; i < Drinks.Count; i++) {
+                            <option value="@i">@Drinks[i].Name - (£@(Drinks[i].Price))</option>
                         }
                     </select>
                 }
             </div>
 
-            
-            <div class="toppings">
-                @foreach (var side in Sides.SideItems)
+
+            @*<div class="toppings">
+                @foreach (var side in Sides)
                 {
                     <div class="topping">
                         @side.Name
                         <span class="topping-price">@side.Price</span>
-                        <button type="button" class="delete-topping" @onclick="@(() => RemoveTopping(side))">x</button>
+                        <button type="button" class="delete-topping" @onclick="@(() => RemoveSide(side))">x</button>
                     </div>
                 }
-            </div>
+            </div>*@
 
         </form>
         <div class="dialog-buttons">
             <button class="btn btn-secondary mr-auto" @onclick="OnCancel">Cancel</button>
             <span class="mr-center">
-                Price: <span class="price">@(Item.Price)</span>
+                Price: <span class="price">@(Main.Price)</span>
             </span>
             <button class="btn btn-success ml-auto" @onclick="OnConfirm">Order ></button>
         </div>
@@ -56,18 +63,34 @@
 
 
 @code {
-    [Parameter] public MenuItem Item { get; set; }
+    [Parameter] public Main Main { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }
 
-    // todo: replace this with a database call (soon)...
-    Sides Sides { get; set; } = new Sides();
-
-    void SideItemSelected(ChangeEventArgs e) {
-        if (int.TryParse((string)e.Value, out var index) && index >= 0)
-            AddSideItem(Sides.SideItems[index]);
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Sides = _db.Sides.ToList();
+        Drinks = _db.Drinks.ToList();
     }
 
-    void AddSideItem(SideMenuItem side) => Item.Sides.Add(side);
-    void RemoveTopping(SideMenuItem side) => Item.Sides.RemoveAll(pt => pt.Name == side.Name);
+    List<Side> Sides { get; set; } = new List<Side>();
+    List<Drink> Drinks { get; set; } = new List<Drink>();
+
+    void SideSelected(ChangeEventArgs e) {
+        if (int.TryParse((string)e.Value, out var index) && index >= 0)
+            AddSide(Sides[index]);
+    }
+
+    void DrinkSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse((string)e.Value, out var index) && index >= 0)
+            AddDrink(Drinks[index]);
+    }
+
+    void AddDrink(Drink drink) => Main.Drink = drink;
+    void RemoveDrink() => Main.Drink = null;
+
+    void AddSide(Side side) => Main.Sides= side;
+    void RemoveSide() => Main.Sides = null;
 }
