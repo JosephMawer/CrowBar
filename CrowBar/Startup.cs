@@ -15,7 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CrowBar.Areas.Identity;
 using CrowBar.Data;
-
+using CrowBar.Areas.Identity.Data;
 
 namespace CrowBar
 {
@@ -36,8 +36,8 @@ namespace CrowBar
             //    options.UseSqlServer(
             //        Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddDbContext<ApplicationDbContext>(
-                options => options.UseSqlite("Data Source=crowbar.db"));
+            services.AddDbContext<CrowBarContext>(
+                options => options.UseSqlite("Data Source=CrowBar.db"));
 
             //services.AddIdentity<IdentityUser, IdentityRole<Guid>>(options =>
             //    {
@@ -63,9 +63,9 @@ namespace CrowBar
 
 
 
-            services.AddDefaultIdentity<IdentityUser>()
+            services.AddDefaultIdentity<CrowBarUser>()
                     .AddRoles<IdentityRole>()
-                    .AddEntityFrameworkStores<ApplicationDbContext>();
+                    .AddEntityFrameworkStores<CrowBarContext>();
 
 
             services.Configure<IdentityOptions>(options =>
@@ -89,7 +89,7 @@ namespace CrowBar
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<CrowBarUser>>();
 
             SeedData(services);
         }
@@ -101,8 +101,8 @@ namespace CrowBar
             var scopeFactory = services.GetRequiredService<IServiceScopeFactory>();
             using (var scope = scopeFactory.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var userManager = services.GetService<UserManager<IdentityUser>>();
+                var db = scope.ServiceProvider.GetRequiredService<CrowBarContext>();
+                var userManager = services.GetService<UserManager<CrowBarUser>>();
                 if (db.Database.EnsureCreated())
                 {
                     CrowBar.Data.SeedData.Initialize(db, userManager);

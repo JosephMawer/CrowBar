@@ -1,4 +1,5 @@
-﻿using CrowBar.Models;
+﻿using CrowBar.Areas.Identity.Data;
+using CrowBar.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System;
@@ -10,7 +11,7 @@ namespace CrowBar.Data
 {
     public static class SeedData
     {
-        public static void Initialize(ApplicationDbContext db,UserManager<IdentityUser> userManager)
+        public static void Initialize(CrowBarContext db,UserManager<CrowBarUser> userManager)
         {
             var drinks = new Drink[]
             {
@@ -65,13 +66,13 @@ namespace CrowBar.Data
             db.SaveChanges();
         }
 
-        private static void AddUsers(ApplicationDbContext db, List<IdentityUser> users)
+        private static void AddUsers(CrowBarContext db, List<CrowBarUser> users)
         {
             foreach (var user in users)
             {
                 if (!db.Users.Any(u => u.UserName == user.UserName))
                 {
-                    var userStore = new UserStore<IdentityUser>(db);
+                    var userStore = new UserStore<CrowBarUser>(db);
                     userStore.CreateAsync(user).GetAwaiter().GetResult();
                     if (user.UserName.Contains("admin"))
                         userStore.AddToRoleAsync(user, "ADMINISTRATOR").GetAwaiter().GetResult();
@@ -83,7 +84,7 @@ namespace CrowBar.Data
             }
         }
 
-        private static void AddRoles(ApplicationDbContext db)
+        private static void AddRoles(CrowBarContext db)
         {
             string[] roles = new string[] { "Owner", "Administrator", "Customer" };
 
@@ -102,9 +103,9 @@ namespace CrowBar.Data
             }
         }
 
-        private static List<IdentityUser> GetDefaultUsers()
+        private static List<CrowBarUser> GetDefaultUsers()
         {
-            var admin = new IdentityUser
+            var admin = new CrowBarUser 
             {
                 Email = "admin@hotmail.com",
                 NormalizedEmail = "ADMIN@HOTMAIL.COM",
@@ -115,11 +116,11 @@ namespace CrowBar.Data
                 PhoneNumberConfirmed = false,
                 SecurityStamp = Guid.NewGuid().ToString("D")
             };
-            var password = new PasswordHasher<IdentityUser>();
+            var password = new PasswordHasher<CrowBarUser>();
             var hashed = password.HashPassword(admin, "12345");
             admin.PasswordHash = hashed;
 
-            var owner = new IdentityUser
+            var owner = new CrowBarUser 
             {
                 Email = "owner@hotmail.com",
                 NormalizedEmail = "OWNER@HOTMAIL.COM",
@@ -130,10 +131,10 @@ namespace CrowBar.Data
                 PhoneNumberConfirmed = false,
                 SecurityStamp = Guid.NewGuid().ToString("D")
             };
-            password = new PasswordHasher<IdentityUser>();
+            password = new PasswordHasher<CrowBarUser>();
             hashed = password.HashPassword(owner, "12345");
             owner.PasswordHash = hashed;
-            return new List<IdentityUser>() { admin, owner };
+            return new List<CrowBarUser>() { admin, owner };
         }
     }
 }
