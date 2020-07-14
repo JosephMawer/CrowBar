@@ -1,5 +1,7 @@
 ﻿@page "/myorders"
 
+@attribute [Authorize(Roles = "Administrator, Owner, Customer")]
+
 @using CrowBar.Models;
 
     <div class="main">

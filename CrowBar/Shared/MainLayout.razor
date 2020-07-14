@@ -10,11 +10,14 @@
         <div>Menu</div>
     </NavLink>
 
-    <NavLink href="myorders" class="nav-tab">
-        <img src="img/bike.svg" />
-        <div>My Orders</div>
-    </NavLink>
-
+    <AuthorizeView Roles="Administrator,Owner,Customer">
+        <NavLink href="myorders" class="nav-tab">
+            <img src="img/bike.svg" />
+            <div>My Orders</div>
+        </NavLink>
+    </AuthorizeView>
+  
+    <LoginDisplay />
 </div>
 
 

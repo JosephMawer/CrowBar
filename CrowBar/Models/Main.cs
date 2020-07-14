@@ -23,6 +23,8 @@ namespace CrowBar.Models
         public Side Sides { get; set; }
         public Drink Drink { get; set; }
 
+        public string Note { get; set; }
+
         /// <summary>
         /// The total cost of the menu item, including cost of sides
         /// </summary>

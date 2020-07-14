@@ -1,11 +1,16 @@
 ﻿using CrowBar.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CrowBar.Data
 {
     public static class SeedData
     {
-        public static void Initialize(ApplicationDbContext db)
+        public static void Initialize(ApplicationDbContext db,UserManager<IdentityUser> userManager)
         {
             var drinks = new Drink[]
             {
@@ -13,7 +18,6 @@ namespace CrowBar.Data
                 new Drink() {Name= "Coke",Price = 2.50m},
                 new Drink() {Name = "Fancy Drink", Description = "A really fancy fruity drink", Price = 6.00m,}
             };
-
             var sides = new Side[]
             {
                 new Side() {Name = "Fries", Description= "Regular Fries", Price = 2.50m, },
@@ -46,8 +50,90 @@ namespace CrowBar.Data
             db.Sides.AddRange(sides);
             db.Mains.AddRange(mains);
 
+
+
+            AddRoles(db);
+
+
+            var users = GetDefaultUsers();
+
+            AddUsers(db, users);
+
+
+           
+
             db.SaveChanges();
         }
-   
+
+        private static void AddUsers(ApplicationDbContext db, List<IdentityUser> users)
+        {
+            foreach (var user in users)
+            {
+                if (!db.Users.Any(u => u.UserName == user.UserName))
+                {
+                    var userStore = new UserStore<IdentityUser>(db);
+                    userStore.CreateAsync(user).GetAwaiter().GetResult();
+                    if (user.UserName.Contains("admin"))
+                        userStore.AddToRoleAsync(user, "ADMINISTRATOR").GetAwaiter().GetResult();
+                    else if (user.UserName.Contains("owner"))
+                        userStore.AddToRoleAsync(user, "OWNER").GetAwaiter().GetResult();
+                    //userManager.CreateAsync(user).GetAwaiter().GetResult();
+                    //userManager.AddToRoleAsync(user, "OWNER").GetAwaiter().GetResult();
+                }
+            }
+        }
+
+        private static void AddRoles(ApplicationDbContext db)
+        {
+            string[] roles = new string[] { "Owner", "Administrator", "Customer" };
+
+            foreach (string role in roles)
+            {
+                var roleStore = new RoleStore<IdentityRole>(db);
+
+                if (!db.Roles.Any(r => r.Name == role))
+                {
+                    var identityRole = new IdentityRole(role)
+                    {
+                        NormalizedName = role.ToUpper()
+                    };
+                    roleStore.CreateAsync(identityRole);
+                }
+            }
+        }
+
+        private static List<IdentityUser> GetDefaultUsers()
+        {
+            var admin = new IdentityUser
+            {
+                Email = "admin@hotmail.com",
+                NormalizedEmail = "ADMIN@HOTMAIL.COM",
+                UserName = "admin@hotmail.com",
+                NormalizedUserName = "ADMIN@HOTMAIL.COM",
+                PhoneNumber = "",
+                EmailConfirmed = false,
+                PhoneNumberConfirmed = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            var password = new PasswordHasher<IdentityUser>();
+            var hashed = password.HashPassword(admin, "12345");
+            admin.PasswordHash = hashed;
+
+            var owner = new IdentityUser
+            {
+                Email = "owner@hotmail.com",
+                NormalizedEmail = "OWNER@HOTMAIL.COM",
+                UserName = "owner@hotmail.com",
+                NormalizedUserName = "OWNER@HOTMAIL.COM",
+                PhoneNumber = "",
+                EmailConfirmed = false,
+                PhoneNumberConfirmed = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            password = new PasswordHasher<IdentityUser>();
+            hashed = password.HashPassword(owner, "12345");
+            owner.PasswordHash = hashed;
+            return new List<IdentityUser>() { admin, owner };
+        }
     }
 }

@@ -39,12 +39,75 @@ namespace CrowBar
             services.AddDbContext<ApplicationDbContext>(
                 options => options.UseSqlite("Data Source=crowbar.db"));
 
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            //services.AddIdentity<IdentityUser, IdentityRole<Guid>>(options =>
+            //    {
+            //        // make it really easy to create a password :)
+            //        options.Password.RequireDigit = false;
+            //        options.Password.RequiredLength = 6;
+            //        options.Password.RequireLowercase = false;
+            //        options.Password.RequireNonAlphanumeric = false;
+            //        options.Password.RequireUppercase = false;
+
+
+            //        options.User.RequireUniqueEmail = false;
+
+            //        options.SignIn.RequireConfirmedAccount = false;
+            //        options.SignIn.RequireConfirmedEmail = false;
+            //        options.SignIn.RequireConfirmedPhoneNumber = false;
+
+            //        options.Lockout.MaxFailedAccessAttempts = 6;
+            //    })
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddDefaultUI()
+            //    .AddDefaultTokenProviders();
+
+
+
+            services.AddDefaultIdentity<IdentityUser>()
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                // make it really easy to create a password :)
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+
+
+                options.User.RequireUniqueEmail = false;
+
+                options.SignIn.RequireConfirmedAccount = false;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.SignIn.RequireConfirmedPhoneNumber = false;
+
+                options.Lockout.MaxFailedAccessAttempts = 6;
+            });
+
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-            
+
+            SeedData(services);
+        }
+
+        private void SeedData(IServiceCollection service)
+        {
+            var services = service.BuildServiceProvider();
+            // Initialize the database
+            var scopeFactory = services.GetRequiredService<IServiceScopeFactory>();
+            using (var scope = scopeFactory.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var userManager = services.GetService<UserManager<IdentityUser>>();
+                if (db.Database.EnsureCreated())
+                {
+                    CrowBar.Data.SeedData.Initialize(db, userManager);
+                }
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,6 +135,7 @@ namespace CrowBar
 
             app.UseEndpoints(endpoints =>
             {
+                // automatically map all the controllers in the Identity.UI package
                 endpoints.MapControllers();
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");

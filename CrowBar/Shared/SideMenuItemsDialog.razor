@@ -15,12 +15,13 @@
 
             <div>
                 <label>Add A Side:</label>
-                @if (Sides == null)
+                @if (Sides != null)
                 {
                     <select class="custom-select" @onchange="SideSelected">
                         <option value="-1" disabled selected>(select)</option>
-                        @for (var i = 0; i < Sides.Count; i++) {
-                            <option value="@i">@Sides[i].Name - (£@(Sides[i].Price))</option>
+                        @for (var i = 0; i < Sides.Count; i++)
+                        {
+                            <option value="@i">@Sides[i].Name - ($@(Sides[i].Price))</option>
                         }
                     </select>
                 }
@@ -31,24 +32,32 @@
                 {
                     <select class="custom-select" @onchange="DrinkSelected">
                         <option value="-1" disabled selected>(select)</option>
-                        @for (var i = 0; i < Drinks.Count; i++) {
-                            <option value="@i">@Drinks[i].Name - (£@(Drinks[i].Price))</option>
+                        @for (var i = 0; i < Drinks.Count; i++)
+                        {
+                            <option value="@i">@Drinks[i].Name - ($@(Drinks[i].Price))</option>
                         }
                     </select>
                 }
             </div>
+            <div>
+                <label>Add a note:</label>
+               
+                <input @onchange="UpdateNote"/>
+                   
+                
+            </div>
 
 
             @*<div class="toppings">
-                @foreach (var side in Sides)
-                {
-                    <div class="topping">
-                        @side.Name
-                        <span class="topping-price">@side.Price</span>
-                        <button type="button" class="delete-topping" @onclick="@(() => RemoveSide(side))">x</button>
-                    </div>
-                }
-            </div>*@
+            @foreach (var side in Sides)
+            {
+                <div class="topping">
+                    @side.Name
+                    <span class="topping-price">@side.Price</span>
+                    <button type="button" class="delete-topping" @onclick="@(() => RemoveSide(side))">x</button>
+                </div>
+            }
+        </div>*@
 
         </form>
         <div class="dialog-buttons">
@@ -69,9 +78,14 @@
 
     protected override void OnInitialized()
     {
-        base.OnInitialized();
         Sides = _db.Sides.ToList();
         Drinks = _db.Drinks.ToList();
+        base.OnInitialized();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        return base.OnParametersSetAsync();
     }
 
     List<Side> Sides { get; set; } = new List<Side>();
@@ -86,6 +100,12 @@
     {
         if (int.TryParse((string)e.Value, out var index) && index >= 0)
             AddDrink(Drinks[index]);
+    }
+
+    void UpdateNote(ChangeEventArgs e)
+    {
+        var msg = e.Value.ToString();
+        Main.Note = msg;
     }
 
     void AddDrink(Drink drink) => Main.Drink = drink;

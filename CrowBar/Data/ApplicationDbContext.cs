@@ -15,5 +15,11 @@ namespace CrowBar.Data
         public DbSet<Side> Sides { get; set; }
         public DbSet<Main> Mains { get; set; }
         public DbSet<Order> Orders { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+        }
     }
 }
