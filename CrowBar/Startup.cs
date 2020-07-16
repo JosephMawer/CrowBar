@@ -90,7 +90,7 @@ namespace CrowBar
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<CrowBarUser>>();
-
+            services.AddHttpContextAccessor();
             SeedData(services);
         }
 

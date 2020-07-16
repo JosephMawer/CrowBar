@@ -1,22 +1,13 @@
 ﻿<div class="cart-item">
     <a @onclick="OnRemoved" class="delete-item">x</a>
-    <div class="title">@(Main.Name)</div>
-    
-    @if(Main.Sides != null)
-    {
-        <div>+ @Main.Sides.Name</div>
-    }
-    @if (Main.Drink != null)
-    {
-        <div>+ @Main.Drink.Name</div>
-    }
+    <div class="title">@(order.MenuItem.Name), + @(order.Quantity)</div>
 
     <div class="item-price">
-        @Main.Total()
-    </div>
+            $@(order.MenuItem.Price * order.Quantity)
+        </div>
 </div>
 
 @code {
-    [Parameter] public Models.Main Main { get; set; }
+    [Parameter] public CrowBar.Models.OrderItem order { get; set; }
     [Parameter] public EventCallback OnRemoved { get; set; }
 }

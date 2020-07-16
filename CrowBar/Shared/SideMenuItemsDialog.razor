@@ -1,15 +1,15 @@
 ﻿@using CrowBar.Models;
 
 
-@inject CrowBar.Data.ApplicationDbContext _db;
+@inject CrowBar.Data.CrowBarContext _db;
 
 @* This is a child component - its parent is Menu.razor (page) *@
 
 <div class="dialog-container">
     <div class="dialog">
         <div class="dialog-title">
-            <h2>@Main.Name</h2>
-            @Main.Description
+            @*<h2>@OrderItem.Name</h2>
+            @OrderItem.Description*@
         </div>
         <form class="dialog-body">
 
@@ -63,7 +63,7 @@
         <div class="dialog-buttons">
             <button class="btn btn-secondary mr-auto" @onclick="OnCancel">Cancel</button>
             <span class="mr-center">
-                Price: <span class="price">@(Main.Price)</span>
+                @*Price: <span class="price">@(OrderItem.Price)</span>*@
             </span>
             <button class="btn btn-success ml-auto" @onclick="OnConfirm">Order ></button>
         </div>
@@ -72,7 +72,7 @@
 
 
 @code {
-    [Parameter] public Main Main { get; set; }
+    [Parameter] public OrderItem orderItem { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }
 
@@ -88,8 +88,8 @@
         return base.OnParametersSetAsync();
     }
 
-    List<Side> Sides { get; set; } = new List<Side>();
-    List<Drink> Drinks { get; set; } = new List<Drink>();
+    List<Sides> Sides { get; set; } = new List<Sides>();
+    List<Drinks> Drinks { get; set; } = new List<Drinks>();
 
     void SideSelected(ChangeEventArgs e) {
         if (int.TryParse((string)e.Value, out var index) && index >= 0)
@@ -105,12 +105,16 @@
     void UpdateNote(ChangeEventArgs e)
     {
         var msg = e.Value.ToString();
-        Main.Note = msg;
+        // OrderItem.Note = msg;
     }
 
-    void AddDrink(Drink drink) => Main.Drink = drink;
-    void RemoveDrink() => Main.Drink = null;
+    void AddDrink(Drinks drink) {
+        //orderItem.Drink = drink; 
+    }
+    void RemoveDrink() { }// => orderItem.Drink = null;
 
-    void AddSide(Side side) => Main.Sides= side;
-    void RemoveSide() => Main.Sides = null;
+    void AddSide(Sides side) {
+        //orderItem.Side = side;
+    }
+    void RemoveSide() { }// => orderItem.Side = null;
 }

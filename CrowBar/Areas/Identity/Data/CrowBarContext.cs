@@ -17,10 +17,11 @@ namespace CrowBar.Data
         {
         }
 
-        public DbSet<Drink> Drinks { get; set; }
-        public DbSet<Side> Sides { get; set; }
-        public DbSet<Main> Mains { get; set; }
+        public DbSet<Drinks> Drinks { get; set; }
+        public DbSet<Sides> Sides { get; set; }
+        public DbSet<Mains> Mains { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItem { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -28,6 +29,9 @@ namespace CrowBar.Data
             // Customize the ASP.NET Identity model and override the defaults if needed.
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
+
+            builder.Entity<Order>().HasMany(x => x.OrderItems);
+            //builder.Entity<MenuItem>().HasNoKey();
         }
     }
 }

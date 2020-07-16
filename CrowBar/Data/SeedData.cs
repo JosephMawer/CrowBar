@@ -13,45 +13,36 @@ namespace CrowBar.Data
     {
         public static void Initialize(CrowBarContext db,UserManager<CrowBarUser> userManager)
         {
-            var drinks = new Drink[]
+            var drinks = new Drinks[]
             {
-                new Drink() {Name = "Pepsi", Price = 2.50m, },
-                new Drink() {Name= "Coke",Price = 2.50m},
-                new Drink() {Name = "Fancy Drink", Description = "A really fancy fruity drink", Price = 6.00m,}
+                new Drinks() {Name = "Pepsi", Price = 2.50m, },
+                new Drinks() {Name= "Coke",Price = 2.50m},
+                new Drinks() {Name = "Fancy Drink", Description = "A really fancy fruity drink", Price = 6.00m,}
             };
-            var sides = new Side[]
+            var sides = new Sides[]
             {
-                new Side() {Name = "Fries", Description= "Regular Fries", Price = 2.50m, },
-                new Side() {Name= "Sweet Potatoe Fries", Description = "The sweetest potatoe you know.", Price = 3.00m},
-                new Side() {Name = "Salad", Description = "No one ever gets this..", Price = 3.00m,}
+                // todo : figure out how to support options, via some dialog, + database
+                new Sides() {Name = "Hot dog", Description = "Small / Large", Price = 2m},
+                new Sides() {Name = "French Fries", Description= "Small / Large", Price = 5m, },
+                new Sides() {Name = "Poutine", Description = "Yes, with cheese curds!", Price = 10m},
+                new Sides() {Name = "Onion Rings", Description = "If you like it put a ring on it.", Price = 8m,}
             };
-            var mains = new Main[]
+            var mains = new Mains[]
             {
-                new Main { Name = "Chicken Burger", Price = 14.99m,
-                    ImageUrl = "img/pizzas/bacon.jpg", Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"},
-                new Main {Name = "Bean Burger",Price = 12.99m,
-                    Description = "Beans, beans, the magical fruit, the more you eat the more you toot. Healthy and delicious :)"},
-                new Main {Name = "Poutine", Price = 8.99m, 
-                    Description = "Try our mouth watering poutine and gravy with cheese from Empire!"},
-                new Main {Name = "Salad", Price = 11.99m,
-                    Description = "Salad... pweh!"},
-                new Main {Name = "Hot Dog", Price = 6.99m, 
-                    Description = "Get your delicious frankenfurt style sausage!"},
-                new Main {Name = "Hamburger With Bacon", Price = 14.99m,
-                    Description = "Try our savoury fire roasted chicken tequilla with black peppermint and chipotle sauce with a side of delicisous oven roosted roosters!"}
+                new Mains { Name = "All Beef Bacon Burger", Price = 17m,
+                    ImageUrl = "img/pizzas/bacon.jpg", Description = "Fresh beef burger patty, bacon, cheese, lettuce, tomatoe, grilled onion."},
+                new Mains {Name = "Crow Burger",Price = 17m,
+                    Description = "Fresh beef burger patty, bacon, cheese, peanut butter, lettuce, tomatoe, grilled onion."},
+                new Mains {Name = "Juicy Chicken Burger", Price = 17m, 
+                    Description = "Grilled chicken breast, bacon, cheese, lettuce, tomatoe, mayo."},
+                new Mains {Name = "Black Bean Burger", Price = 17m,
+                    Description = "Delcious homemade black bean burger, lettuce, tomatoe, mayo"},
+               
             };
-            var orders = new Order()
-            {
-                OrderId = 1,
-                Mains = mains.ToList()
-            };
+  
 
-            db.Orders.AddRange(orders);
-            db.Drinks.AddRange(drinks);
-            db.Sides.AddRange(sides);
-            db.Mains.AddRange(mains);
-
-
+            // extras
+            // gravy can go in the extras category??
 
             AddRoles(db);
 
@@ -60,8 +51,11 @@ namespace CrowBar.Data
 
             AddUsers(db, users);
 
-
-           
+            //orders.User = firstUser;
+            //db.Orders.AddRange(orders);
+            db.Drinks.AddRange(drinks);
+            db.Sides.AddRange(sides);
+            db.Mains.AddRange(mains);
 
             db.SaveChanges();
         }
@@ -78,8 +72,8 @@ namespace CrowBar.Data
                         userStore.AddToRoleAsync(user, "ADMINISTRATOR").GetAwaiter().GetResult();
                     else if (user.UserName.Contains("owner"))
                         userStore.AddToRoleAsync(user, "OWNER").GetAwaiter().GetResult();
-                    //userManager.CreateAsync(user).GetAwaiter().GetResult();
-                    //userManager.AddToRoleAsync(user, "OWNER").GetAwaiter().GetResult();
+                    else
+                        userStore.AddToRoleAsync(user, "CUSTOMER").GetAwaiter().GetResult();
                 }
             }
         }
@@ -103,8 +97,12 @@ namespace CrowBar.Data
             }
         }
 
+        static CrowBarUser firstUser = new CrowBarUser();
+
+
         private static List<CrowBarUser> GetDefaultUsers()
         {
+         
             var admin = new CrowBarUser 
             {
                 Email = "admin@hotmail.com",
@@ -134,7 +132,22 @@ namespace CrowBar.Data
             password = new PasswordHasher<CrowBarUser>();
             hashed = password.HashPassword(owner, "12345");
             owner.PasswordHash = hashed;
-            return new List<CrowBarUser>() { admin, owner };
+
+            firstUser = new CrowBarUser()
+            {
+                Email = "first@hotmail.com",
+                NormalizedEmail = "FIRST@HOTMAIL.COM",
+                UserName = "first@hotmail.com",
+                NormalizedUserName = "FIRST@HOTMAIL.COM",
+                PhoneNumber = "",
+                EmailConfirmed = false,
+                PhoneNumberConfirmed = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            password = new PasswordHasher<CrowBarUser>();
+            hashed = password.HashPassword(firstUser, "12345");
+            firstUser.PasswordHash = hashed;
+            return new List<CrowBarUser>() { admin, owner, firstUser };
         }
     }
 }

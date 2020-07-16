@@ -1,56 +1,71 @@
 ﻿@page "/myorders"
 
+@using CrowBar.Models;
+@using Microsoft.AspNetCore.Http;
+@using System.Linq;
+
+@inject IHttpContextAccessor HttpContextAccessor;
+@inject Microsoft.AspNetCore.Identity.UserManager<CrowBar.Areas.Identity.Data.CrowBarUser> _userManager;
+@inject CrowBar.Data.CrowBarContext _db;
+
 @attribute [Authorize(Roles = "Administrator, Owner, Customer")]
 
-@using CrowBar.Models;
-
-    <div class="main">
-        @if (ordersWithStatus == null)
-        {
-            <text>Loading...</text>
-        }
-        else if (!ordersWithStatus.Any())
-        {
-            <h2>No orders placed</h2>
-            <a class="btn btn-success" href="/menu">Order some pizza</a>
-        }
-        else
-        {
-            @* It looks like a lot of code, but there's nothing special here. It simply uses a 
-               @foreach to iterate over the ordersWithStatus and outputs a <div> for each one. *@
-            <div class="list-group orders-list">
-                @*@foreach (var item in ordersWithStatus)
+<div class="main">
+    @if (orders == null)
+    {
+        <text>Loading...</text>
+    }
+    else if (!orders.Any())
+    {
+        <h2>No orders placed</h2>
+        <a class="btn btn-success" href="/menu">Order some pizza</a>
+    }
+    else
+    {
+        @* It looks like a lot of code, but there's nothing special here. It simply uses a
+            @foreach to iterate over the ordersWithStatus and outputs a <div> for each one. *@
+        <div class="list-group orders-list">
+            @foreach (var order in orders)
                 {
                     <div class="list-group-item">
                         <div class="col">
-                            <h5>@item.Order.CreatedTime.ToLongDateString()</h5>
+                            <h5>@order.CreatedTime.ToLongDateString()</h5>
                             Items:
-                            <strong>@item.Order.Pizzas.Count()</strong>;
+                            <strong>@order.OrderItems.Count</strong>;
                             Total price:
-                            <strong>£@item.Order.GetFormattedTotalPrice()</strong>
+                            <strong>$@order.GetFormattedBasePrice()</strong>
                         </div>
                         <div class="col">
-                            Status: <strong>@item.StatusText</strong>
+                            Status: <strong>@order.OrderStatus</strong>
                         </div>
                         <div class="col flex-grow-0">
-                            <a href="myorders/@item.Order.OrderId" class="btn btn-success">
+                            <a href="myorders/@order.OrderId" class="btn btn-success">
                                 Track &gt;
                             </a>
                         </div>
                     </div>
-                }*@
-            </div>
-        }
-    </div>
+                }
+        </div>
+    }
+</div>
 
 
 
 @code {
-    IEnumerable<OrderWithStatus> ordersWithStatus;
+    IEnumerable<Order> orders;
 
     protected override void OnInitialized()
     {
-        ordersWithStatus = new List<OrderWithStatus>();
         base.OnInitialized();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var userClaim = HttpContextAccessor.HttpContext.User;
+        var user = await _userManager.GetUserAsync(userClaim);
+
+        orders = _db.Orders.Where(x => x.User.Id == user.Id)
+                           .OrderByDescending(x => x.CreatedTime);   // todo: filter for 'active' orders
+
     }
 }

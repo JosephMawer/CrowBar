@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CrowBar.Areas.Identity.Data;
+using System;
 using System.Collections.Generic;
 
 namespace CrowBar.Models
@@ -6,23 +7,16 @@ namespace CrowBar.Models
     public class Order
     {
         public int OrderId { get; set; }
-
-        public int MainId { get; set; }
-        public int SideId { get; set; }
-
-
-        public string UserId { get; set; }
-
+        public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public CrowBarUser User { get; set; }
         public DateTime CreatedTime { get; set; }
-
-        public List<Main> Mains { get; set; } = new List<Main>();
-        public List<Side> Sides { get; set; } = new List<Side>();
+        public string OrderStatus { get; set; } = "Preparing";
 
         public string GetFormattedBasePrice()
         {
             var total = 0m;
-            foreach (var main in Mains)
-                total += decimal.Parse(main.Total());
+            foreach (var item in OrderItems)
+                total += item.Quantity * item.MenuItem.Price;
             return total.ToString("F2");
         }
        
