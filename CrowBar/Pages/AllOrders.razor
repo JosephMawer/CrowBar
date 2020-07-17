@@ -1,0 +1,123 @@
+﻿@page "/allorders"
+
+@using CrowBar.Models;
+@using Microsoft.EntityFrameworkCore;
+@using System.Threading;
+
+@inject CrowBar.Data.CrowBarContext _db;
+
+<div class="main">
+    <div class="main">
+        @if (invalidOrder)
+        {
+            <h2>Nope</h2>
+            <p>Error, this order could not be loaded.</p>
+        }
+        else if (allOrders == null)
+        {
+            <text>Loading...</text>
+        }
+        else
+        {
+            @foreach (var order in allOrders)
+            {
+                <div class="track-order">
+                    <div class="track-order-title">
+                        <h2>
+                            Order #@(order.OrderId) - Order placed @order.CreatedTime.ToLongDateString()
+                        </h2>
+                    </div>
+                    <div class="track-order-body">
+
+                        <div class="track-order-details">
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <p>
+                                    <strong>
+                                        @item.Quantity - @(item.MenuItem.Name)
+                                    </strong>
+                                </p>
+                            }
+
+                            <p>
+                                <strong>
+                                    Total price:
+                                    $@order.GetFormattedBasePrice()
+                                </strong>
+                            </p>
+                            <div class="col flex-grow-0">
+                                <a @onclick="(() => OrdersUp(order))" class="btn btn-success">
+                                    Orders Up
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    List<OrderItem> orderItems;
+    List<Order> allOrders;
+    bool invalidOrder;
+    CancellationTokenSource pollingCancellationToken;
+
+    protected override void OnParametersSet()
+    {
+        // If we were already polling for a different order, stop doing so
+        pollingCancellationToken?.Cancel();
+
+        // Start a new poll loop
+        PollForUpdates();
+    }
+
+    void OrdersUp(Order order)
+    {
+        var currentOrder = _db.Orders.Where(x => x.OrderId == order.OrderId).Single();
+        currentOrder.OrderStatus = "Orders Up";
+        _db.Orders.Update(currentOrder);
+        _db.SaveChanges();
+    }
+
+    private async void PollForUpdates()
+    {
+        pollingCancellationToken = new CancellationTokenSource();
+        while (!pollingCancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                invalidOrder = false;
+
+                allOrders = _db.Orders.AsNoTracking().Include(p => p.OrderItems)
+                                        .ThenInclude(p => p.MenuItem)
+                    .Where(x => x.OrderStatus == "Preparing").OrderByDescending(x=>x.OrderId).ToList();
+
+                StateHasChanged();
+
+                // todo: query the order object so we can check on the status
+                //if (order.OrderStatus == "Ready")//.IsDelivered)
+                //{
+                //    pollingCancellationToken.Cancel();
+                //}
+                //else
+                //{
+                //    //await Task.Delay(4000);
+                //}
+
+                // poll every 30 seconds
+                await Task.Delay(5000);
+                //_db.Entry<List<Order>>(allOrders).Reload();
+            }
+            catch (Exception ex)
+            {
+                invalidOrder = true;
+                pollingCancellationToken.Cancel();
+                Console.Error.WriteLine(ex);
+                StateHasChanged();
+            }
+        }
+    }
+}

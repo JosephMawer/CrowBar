@@ -1,0 +1,110 @@
+﻿@page "/myorders/{orderId:int}"
+
+@using CrowBar.Models;
+@using Microsoft.EntityFrameworkCore;
+@using System.Threading;
+
+@inject CrowBar.Data.CrowBarContext _db;
+
+<div class="main">
+    <div class="main">
+        @if (invalidOrder)
+        {
+            <h2>Nope</h2>
+            <p>Sorry, this order could not be loaded.</p>
+        }
+        else if (order == null)
+        {
+            <text>Loading...</text>
+        }
+        else
+        {
+            <div class="track-order">
+                <div class="track-order-title">
+                    <h2>
+                        Order placed @order.CreatedTime.ToLongDateString()
+                    </h2>
+                    <p class="ml-auto mb-0">
+                        Status: <strong>@order.OrderStatus</strong>
+                    </p>
+                </div>
+                <div class="track-order-body">
+         
+                        <div class="track-order-details">
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <p>
+                                    <strong>
+                                        @item.Quantity - @(item.MenuItem.Name)"
+                                    </strong>
+                                </p>
+                            }
+
+                            <p>
+                                <strong>
+                                    Total price:
+                                    $@order.GetFormattedBasePrice()
+                                </strong>
+                            </p>
+                        </div>
+             
+                    </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+    List<OrderItem> orderItems;
+    Order order;
+    bool invalidOrder;
+    CancellationTokenSource pollingCancellationToken;
+
+    protected override void OnParametersSet()
+    {
+        // If we were already polling for a different order, stop doing so
+        pollingCancellationToken?.Cancel();
+
+        // Start a new poll loop
+        PollForUpdates();
+    }
+
+    private async void PollForUpdates()
+    {
+        pollingCancellationToken = new CancellationTokenSource();
+        while (!pollingCancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                invalidOrder = false;
+                // todo: single will throw, how to handle this.
+                orderItems = _db.OrderItem.Include(p => p.MenuItem)
+                    .AsNoTracking()
+                   .Where(x =>x.Order.OrderId == OrderId).ToList();   // todo: filter for 'active' orders
+
+                order = _db.Orders.AsNoTracking().Where(x => x.OrderId == OrderId).Single();
+
+                StateHasChanged();
+
+                // todo: query the order object so we can check on the status
+                if (order.OrderStatus == "Orders Up")//.IsDelivered)
+                {
+                    pollingCancellationToken.Cancel();
+                }
+                else
+                {
+                    await Task.Delay(5000);
+                    _db.Entry<Order>(order).Reload();
+                }
+            }
+            catch (Exception ex)
+            {
+                invalidOrder = true;
+                pollingCancellationToken.Cancel();
+                Console.Error.WriteLine(ex);
+                StateHasChanged();
+            }
+        }
+    }
+}

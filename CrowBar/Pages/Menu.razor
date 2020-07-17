@@ -66,130 +66,132 @@
 
     </div>
 
+<AuthorizeView Roles="Administrator,Customer">
+    @* This is the side bar component that displays all your orders *@
+    <div class="sidebar">
+        @if (order.OrderItems.Count > 0)
+        {
+            <div class="order-contents">
+                <h2>Your order</h2>
 
-@* This is the side bar component that displays all your orders *@
-<div class="sidebar">
-    @if (order.OrderItems.Count > 0)
-    {
-    <div class="order-contents">
-        <h2>Your order</h2>
-
-        @foreach (var item in order.OrderItems) {
-            <OrderMenu order="item" OnRemoved="@(() => RemoveOrder(item))" />
+                @foreach (var item in order.OrderItems)
+                {
+                    <OrderMenu order="item" OnRemoved="@(() => RemoveOrder(item))" />
+                }
+            </div>
         }
-    </div>
-    }
-    else
-    {
-        <div class="empty-cart">Choose from our menu<br>to get started</div>
-    }
-
-    <div class="order-total @(order.OrderItems.Any() ? "" : "hidden")">
-        Total:
-        <span class="total-price">@order.GetFormattedBasePrice()</span>
-        <button class="btn btn-warning" disabled="@(!order.OrderItems.Any())" @onclick="PlaceOrder">
-            Order >
-        </button>
-    </div>
-</div>
-
-
-
-@code {
-
-    Mains selectedItem;
-    Order order = new Order();
-    IList<Mains> mains;
-    IList<Sides> sides;
-    IList<Drinks> drinks;
-
-
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        // keep these in 3 distinct tables to help split them on the UI
-        mains = _db.Mains.ToList();
-        sides = _db.Sides.ToList();
-        drinks = _db.Drinks.ToList();
-    }
-
-
-
-    void AddMenuItem(MenuItem item) {
-        if (order.OrderItems.Any(x => x.MenuItem.Name == item.Name)) {
-            order.OrderItems.Single(x => x.MenuItem.Name == item.Name).Quantity++;
-        }
-        else {
-            order.OrderItems.Add(new OrderItem() { MenuItem = item });
-        }
-    }
-
-    void RemoveOrder(OrderItem item) {
-
-        var count = order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity;
-        if (count > 1)
-            order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity--;
         else
-            order.OrderItems.Remove(item);
+        {
+            <div class="empty-cart">Choose from our menu<br>to get started</div>
+        }
 
-    }
+        <div class="order-total @(order.OrderItems.Any() ? "" : "hidden")">
+            Total:
+            <span class="total-price">@order.GetFormattedBasePrice()</span>
+            <button class="btn btn-warning" disabled="@(!order.OrderItems.Any())" @onclick="PlaceOrder">
+                Order >
+            </button>
+        </div>
+    </div>
 
+</AuthorizeView>
 
-    async Task PlaceOrder()
-    {
-        var userClaim = HttpContextAccessor.HttpContext.User;
-        var user = await _userManager.GetUserAsync(userClaim);
-        order.User = user;
-        order.CreatedTime = DateTime.Now;
-        order.OrderStatus = "Preparing";
-
-        _db.Orders.Add(order);
-        _db.SaveChanges();
-        order = new Order();
-    }
-
-    //// toggles between main and side menu
-    //void ShowMains()
-    //{
-    //    showMainMenu = true;
-    //    showSideMenu = false;
-    //    showDrinkMenu = false;
-    //}
-
-    //void ShowSides()
-    //{
-    //    showSideMenu = true;
-    //    showMainMenu = false;
-    //    showDrinkMenu = false;
-    //}
-
-    //void ShowDrinks()
-    //{
-    //    showDrinkMenu = true;
-    //    showMainMenu = false;
-    //    showSideMenu = false;
-    //}
-
-    // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the
-    // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
+        @code {
+            Order order = new Order();
+            IList<Mains> mains;
+            IList<Sides> sides;
+            IList<Drinks> drinks;
 
 
-    //void CancelDialog()
-    //{
-    //    selectedItem = null;
-    //    showDialog = false;
-    //}
 
-    //void ConfirmDialog()
-    //{
-    //    selectedItem = null;
-    //    showDialog = false;
-    //}
+            protected override void OnInitialized()
+            {
+                base.OnInitialized();
+                // keep these in 3 distinct tables to help split them on the UI
+                mains = _db.Mains.ToList();
+                sides = _db.Sides.ToList();
+                drinks = _db.Drinks.ToList();
+            }
 
-    //void ShowSideMenuItemsDialog(Main item)
-    //{
 
-    //    selectedItem = item;
-    //}
-}
+
+            void AddMenuItem(MenuItem item)
+            {
+                if (order.OrderItems.Any(x => x.MenuItem.Name == item.Name))
+                {
+                    order.OrderItems.Single(x => x.MenuItem.Name == item.Name).Quantity++;
+                }
+                else
+                {
+                    order.OrderItems.Add(new OrderItem() { MenuItem = item });
+                }
+            }
+
+            void RemoveOrder(OrderItem item)
+            {
+                var count = order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity;
+                if (count > 1)
+                    order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity--;
+                else
+                    order.OrderItems.Remove(item);
+
+            }
+
+
+            async Task PlaceOrder()
+            {
+                var userClaim = HttpContextAccessor.HttpContext.User;
+                var user = await _userManager.GetUserAsync(userClaim);
+                order.User = user;
+                order.CreatedTime = DateTime.Now;
+                order.OrderStatus = "Preparing";
+
+                _db.Orders.Add(order);
+                _db.SaveChanges();
+                order = new Order();
+            }
+
+            //// toggles between main and side menu
+            //void ShowMains()
+            //{
+            //    showMainMenu = true;
+            //    showSideMenu = false;
+            //    showDrinkMenu = false;
+            //}
+
+            //void ShowSides()
+            //{
+            //    showSideMenu = true;
+            //    showMainMenu = false;
+            //    showDrinkMenu = false;
+            //}
+
+            //void ShowDrinks()
+            //{
+            //    showDrinkMenu = true;
+            //    showMainMenu = false;
+            //    showSideMenu = false;
+            //}
+
+            // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the
+            // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
+
+
+            //void CancelDialog()
+            //{
+            //    selectedItem = null;
+            //    showDialog = false;
+            //}
+
+            //void ConfirmDialog()
+            //{
+            //    selectedItem = null;
+            //    showDialog = false;
+            //}
+
+            //void ShowSideMenuItemsDialog(Main item)
+            //{
+
+            //    selectedItem = item;
+            //}
+        }
