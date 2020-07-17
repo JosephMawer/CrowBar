@@ -101,18 +101,25 @@
             IList<Mains> mains;
             IList<Sides> sides;
             IList<Drinks> drinks;
-
+            CrowBar.Areas.Identity.Data.CrowBarUser user;
 
 
             protected override void OnInitialized()
             {
                 base.OnInitialized();
+
                 // keep these in 3 distinct tables to help split them on the UI
                 mains = _db.Mains.ToList();
                 sides = _db.Sides.ToList();
                 drinks = _db.Drinks.ToList();
             }
 
+            protected override async Task OnParametersSetAsync()
+            {
+                await base.OnParametersSetAsync();
+                var userClaim = HttpContextAccessor.HttpContext.User;
+                user = await _userManager.GetUserAsync(userClaim);
+            }
 
 
             void AddMenuItem(MenuItem item)
@@ -140,8 +147,7 @@
 
             async Task PlaceOrder()
             {
-                var userClaim = HttpContextAccessor.HttpContext.User;
-                var user = await _userManager.GetUserAsync(userClaim);
+
                 order.User = user;
                 order.CreatedTime = DateTime.Now;
                 order.OrderStatus = "Preparing";
