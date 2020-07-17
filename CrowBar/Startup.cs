@@ -88,7 +88,11 @@ namespace CrowBar
             });
 
             services.AddRazorPages();
-            services.AddServerSideBlazor();
+            services.AddServerSideBlazor()
+                    .AddCircuitOptions(o =>
+                    {
+                        o.DetailedErrors = true;
+                    });
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<CrowBarUser>>();
             services.AddHttpContextAccessor();
             SeedData(services);
