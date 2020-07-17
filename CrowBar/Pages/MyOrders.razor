@@ -4,8 +4,9 @@
 @using Microsoft.AspNetCore.Http;
 @using System.Linq;
 @using Microsoft.EntityFrameworkCore;
-
-@inject IHttpContextAccessor HttpContextAccessor;
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@*@inject IHttpContextAccessor HttpContextAccessor;*@
 @inject Microsoft.AspNetCore.Identity.UserManager<CrowBar.Areas.Identity.Data.CrowBarUser> _userManager;
 @inject CrowBar.Data.CrowBarContext _db;
 
@@ -27,25 +28,25 @@
             @foreach to iterate over the ordersWithStatus and outputs a <div> for each one. *@
         <div class="list-group orders-list">
             @foreach (var order in orders)
-                {
-                    <div class="list-group-item">
-                        <div class="col">
-                            <h5>@order.CreatedTime.ToLongDateString()</h5>
-                            Items:
-                            <strong>@(order.OrderCount())</strong>;
-                            Total price:
-                            <strong>$@order.GetFormattedBasePrice()</strong>
-                        </div>
-                        <div class="col">
-                            Status: <strong>@order.OrderStatus</strong>
-                        </div>
-                        <div class="col flex-grow-0">
-                            <a href="myorders/@order.OrderId" class="btn btn-success">
-                                Track &gt;
-                            </a>
-                        </div>
+            {
+                <div class="list-group-item">
+                    <div class="col">
+                        <h5>@order.CreatedTime.ToLongDateString()</h5>
+                        Items:
+                        <strong>@(order.OrderCount())</strong>;
+                        Total price:
+                        <strong>$@order.GetFormattedBasePrice()</strong>
                     </div>
-                }
+                    <div class="col">
+                        Status: <strong>@order.OrderStatus</strong>
+                    </div>
+                    <div class="col flex-grow-0">
+                        <a href="myorders/@order.OrderId" class="btn btn-success">
+                            Track &gt;
+                        </a>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>
@@ -58,13 +59,15 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnInitializedAsync();
-        var userClaim = HttpContextAccessor.HttpContext.User;
-        var user = await _userManager.GetUserAsync(userClaim);
-
+        //var userClaim = HttpContextAccessor.HttpContext.User;
+        //var user = await _userManager.GetUserAsync(userClaim);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claimsPrinciple = authState.User;
+        var user = await _userManager.GetUserAsync(claimsPrinciple);
         orders = _db.Orders
-            .Include(p => p.OrderItems).ThenInclude(p => p.MenuItem)
-            .Where(x => x.User.Id == user.Id)
-                           .OrderByDescending(x => x.CreatedTime).ToList();   // todo: filter for 'active' orders
+        .Include(p => p.OrderItems).ThenInclude(p => p.MenuItem)
+        .Where(x => x.User.Id == user.Id)
+                       .OrderByDescending(x => x.CreatedTime).ToList();   // todo: filter for 'active' orders
 
     }
 }

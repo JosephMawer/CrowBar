@@ -2,69 +2,72 @@
 
 @using CrowBar.Models;
 @using Microsoft.AspNetCore.Http;
- 
-@inject IHttpContextAccessor HttpContextAccessor;
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@*@inject IHttpContextAccessor HttpContextAccessor;*@
 @inject Microsoft.AspNetCore.Identity.UserManager<CrowBar.Areas.Identity.Data.CrowBarUser> _userManager;
 @inject CrowBar.Data.CrowBarContext _db;
 
 
-    <div class="main">
+<div class="main">
 
-        <p>Check out our mains, all come with a side of fries!</p>
-        <ul class="menu-cards">
+    <p>Check out our mains, all come with a side of fries!</p>
+    <ul class="menu-cards">
 
-            @if (mains != null)
+        @if (mains != null)
+        {
+            @foreach (var main in mains)
             {
-                @foreach (var main in mains)
-                {
-                    <li @onclick="@(() => AddMenuItem(main))" style="background-image: url('@main.ImageUrl')">
-                        <div class="pizza-info">
-                            <span class="title">@main.Name</span>
-                            @main.Description
-                            <span class="price">@main.Price</span>
-                        </div>
-                    </li>
-                }
+                <li @onclick="@(() => AddMenuItem(main))" style="background-image: url('@main.ImageUrl')">
+                    <div class="pizza-info">
+                        <span class="title">@main.Name</span>
+                        @main.Description
+                        <span class="price">@main.Price</span>
+                    </div>
+                </li>
             }
-        </ul>
-        
+        }
+    </ul>
 
-        <p>Check out our sides menu! ----------------------------- </p>
-        <ul class="menu-cards">
-            @if (sides != null)
+
+    <p>Check out our sides menu! ----------------------------- </p>
+    <ul class="menu-cards">
+        @if (sides != null)
+        {
+            @foreach (var side in sides)
             {
-                @foreach (var side in sides)
-                {
-                    <li @onclick="@(() => AddMenuItem(side))">
-                        <div class="pizza-info">
-                            <span class="title">@side.Name</span>
-                            @side.Description
-                            <span class="price">@side.Price</span>
-                        </div>
-                    </li>
-                }
+                <li @onclick="@(() => AddMenuItem(side))">
+                    <div class="pizza-info">
+                        <span class="title">@side.Name</span>
+                        @side.Description
+                        <span class="price">@side.Price</span>
+                    </div>
+                </li>
             }
-        </ul>
+        }
+    </ul>
 
-        <p>Check out our drinks menu! ---------------------------- </p>
-        <ul class="menu-cards">
-            @if (drinks != null)
+    <p>Check out our drinks menu! ---------------------------- </p>
+    <ul class="menu-cards">
+        @if (drinks != null)
+        {
+            @foreach (var drink in drinks)
             {
-                @foreach (var drink in drinks)
-                {
-                    <li @onclick="@(() => AddMenuItem(drink))">
-                        <div class="pizza-info">
-                            <span class="title">@drink.Name</span>
-                            @drink.Description
-                            <span class="price">@drink.Price</span>
-                        </div>
-                    </li>
-                }
+                <li @onclick="@(() => AddMenuItem(drink))">
+                    <div class="pizza-info">
+                        <span class="title">@drink.Name</span>
+                        @drink.Description
+                        <span class="price">@drink.Price</span>
+                    </div>
+                </li>
             }
-        </ul>
+        }
+    </ul>
 
 
-    </div>
+</div>
 
 <AuthorizeView Roles="Administrator,Customer">
     @* This is the side bar component that displays all your orders *@
@@ -96,108 +99,111 @@
 
 </AuthorizeView>
 
-        @code {
-            Order order = new Order();
-            IList<Mains> mains;
-            IList<Sides> sides;
-            IList<Drinks> drinks;
-            CrowBar.Areas.Identity.Data.CrowBarUser user;
+@code {
+    Order order = new Order();
+    IList<Mains> mains;
+    IList<Sides> sides;
+    IList<Drinks> drinks;
+    CrowBar.Areas.Identity.Data.CrowBarUser user;
 
 
-            protected override void OnInitialized()
-            {
-                base.OnInitialized();
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
 
-                // keep these in 3 distinct tables to help split them on the UI
-                mains = _db.Mains.ToList();
-                sides = _db.Sides.ToList();
-                drinks = _db.Drinks.ToList();
-            }
+        // keep these in 3 distinct tables to help split them on the UI
+        mains = _db.Mains.ToList();
+        sides = _db.Sides.ToList();
+        drinks = _db.Drinks.ToList();
+    }
 
-            protected override async Task OnParametersSetAsync()
-            {
-                await base.OnParametersSetAsync();
-                var userClaim = HttpContextAccessor.HttpContext.User;
-                user = await _userManager.GetUserAsync(userClaim);
-            }
-
-
-            void AddMenuItem(MenuItem item)
-            {
-                if (order.OrderItems.Any(x => x.MenuItem.Name == item.Name))
-                {
-                    order.OrderItems.Single(x => x.MenuItem.Name == item.Name).Quantity++;
-                }
-                else
-                {
-                    order.OrderItems.Add(new OrderItem() { MenuItem = item });
-                }
-            }
-
-            void RemoveOrder(OrderItem item)
-            {
-                var count = order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity;
-                if (count > 1)
-                    order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity--;
-                else
-                    order.OrderItems.Remove(item);
-
-            }
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claimsPrinciple = authState.User;
+        user = await _userManager.GetUserAsync(claimsPrinciple);
+        //var userClaim = HttpContextAccessor.HttpContext.User;
+        //user = await _userManager.GetUserAsync(userClaim);
+    }
 
 
-            async Task PlaceOrder()
-            {
-
-                order.User = user;
-                order.CreatedTime = DateTime.Now;
-                order.OrderStatus = "Preparing";
-
-                _db.Orders.Add(order);
-                _db.SaveChanges();
-                order = new Order();
-            }
-
-            //// toggles between main and side menu
-            //void ShowMains()
-            //{
-            //    showMainMenu = true;
-            //    showSideMenu = false;
-            //    showDrinkMenu = false;
-            //}
-
-            //void ShowSides()
-            //{
-            //    showSideMenu = true;
-            //    showMainMenu = false;
-            //    showDrinkMenu = false;
-            //}
-
-            //void ShowDrinks()
-            //{
-            //    showDrinkMenu = true;
-            //    showMainMenu = false;
-            //    showSideMenu = false;
-            //}
-
-            // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the
-            // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
-
-
-            //void CancelDialog()
-            //{
-            //    selectedItem = null;
-            //    showDialog = false;
-            //}
-
-            //void ConfirmDialog()
-            //{
-            //    selectedItem = null;
-            //    showDialog = false;
-            //}
-
-            //void ShowSideMenuItemsDialog(Main item)
-            //{
-
-            //    selectedItem = item;
-            //}
+    void AddMenuItem(MenuItem item)
+    {
+        if (order.OrderItems.Any(x => x.MenuItem.Name == item.Name))
+        {
+            order.OrderItems.Single(x => x.MenuItem.Name == item.Name).Quantity++;
         }
+        else
+        {
+            order.OrderItems.Add(new OrderItem() { MenuItem = item });
+        }
+    }
+
+    void RemoveOrder(OrderItem item)
+    {
+        var count = order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity;
+        if (count > 1)
+            order.OrderItems.Single(x => x.MenuItem.Name == item.MenuItem.Name).Quantity--;
+        else
+            order.OrderItems.Remove(item);
+
+    }
+
+
+    async Task PlaceOrder()
+    {
+
+        order.User = user;
+        order.CreatedTime = DateTime.Now;
+        order.OrderStatus = "Preparing";
+
+        _db.Orders.Add(order);
+        _db.SaveChanges();
+        order = new Order();
+    }
+
+    //// toggles between main and side menu
+    //void ShowMains()
+    //{
+    //    showMainMenu = true;
+    //    showSideMenu = false;
+    //    showDrinkMenu = false;
+    //}
+
+    //void ShowSides()
+    //{
+    //    showSideMenu = true;
+    //    showMainMenu = false;
+    //    showDrinkMenu = false;
+    //}
+
+    //void ShowDrinks()
+    //{
+    //    showDrinkMenu = true;
+    //    showMainMenu = false;
+    //    showSideMenu = false;
+    //}
+
+    // Now when you click the dialog's Cancel button, Index.CancelDialog will execute, and then the
+    // Index component will rerender itself. Since showingConfigureDialog is now false the dialog will not be displayed.
+
+
+    //void CancelDialog()
+    //{
+    //    selectedItem = null;
+    //    showDialog = false;
+    //}
+
+    //void ConfirmDialog()
+    //{
+    //    selectedItem = null;
+    //    showDialog = false;
+    //}
+
+    //void ShowSideMenuItemsDialog(Main item)
+    //{
+
+    //    selectedItem = item;
+    //}
+}
